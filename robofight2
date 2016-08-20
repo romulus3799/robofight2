@@ -1,0 +1,803 @@
+import java.util.*;
+
+public class RoboFight
+{
+    private String pName;
+    private static final String defaultPName = "Humanity";
+    private String cpuName;
+    
+    private static final String[] cpuNames = 
+    {
+        "Minibot Fodder",
+        "Grinder",
+        "Officer,",
+        "Peacekeeper",
+        "Metal Commander",
+        "Bane of Flesh",
+        ""
+    };
+    private static final String[] bossNames = 
+    {
+        "Skynet",
+        "Ava",
+        "AM",
+        "HAL 9000",
+        "Ultron",
+        "GLaDOS",
+        "CL4P-TP",
+        "Cortana",
+        "Siri",
+        "Deep Blue",
+        "Megatron",
+        "Maria",
+        "Marvin"
+    };
+    private int cpuNameIndex;
+    
+    private int amtGames;
+    private int firstTurn;
+    private int scale;
+    
+    private int pHP;
+    private int cpuHP;
+    private int maxPHP;
+    private int maxCpuHP;
+    
+    private int dmgToP;
+    private int dmgToCpu;
+    
+    private int rocketPunchDmg;
+    private int servoSlamDmg;
+    private int bashDmg;
+    private int EMPDmg;
+    private int clusterBombsDmg;
+    private int shieldBlock;
+    private int rechargeEnergy;
+    
+    private static final int rocketPunchChance = 85;
+    private static final int servoSlamChance = 90;
+    private static final int bashChance = 100;
+    private static final int clusterBombsChance = 50;
+    private static final int energyShieldChance = 90;
+    private static final int rechargeChance = 95;
+    private static final int cpuPenalty = 5;
+    
+    private String option;
+    private int cpuOption;
+    
+    private int hitChance;
+    private static final int CRIT_CHANCE = 5;
+    private int hit;
+    private int block;
+    private int heal;
+    
+    private int cpuChance;
+
+    private boolean gameOver;
+    private String again;
+    private boolean playAgain;
+    private int pWins;
+
+    Scanner sc = new Scanner(System.in);
+    Random rngesus = new Random();
+    public RoboFight()
+    {
+        pName = "Bot";
+        cpuName = "";
+        
+        amtGames = 0;
+        firstTurn = 0;
+        scale = 0;
+        
+        pHP = 0;
+        cpuHP = 0;
+        maxPHP = scale(20);
+        maxCpuHP = scale(15);
+        dmgToP = 0;
+        dmgToCpu = 0;
+        cpuNameIndex = 0;
+        
+        rocketPunchDmg = scale(15);
+        servoSlamDmg = scale(10);
+        bashDmg = scale(7);
+        EMPDmg = scale(30);
+        clusterBombsDmg = scale(7);
+        shieldBlock = scale(7);
+        rechargeEnergy = scale(5);
+        
+        option = "";
+        cpuOption = 0;
+        
+        hitChance = 0;
+        hit = 0;
+        block = 0;
+        heal = 0;
+        
+        cpuChance = 0;
+
+        gameOver = false;
+        again = "";
+        playAgain = true;
+        pWins = 0;
+    }
+    
+    public int scale(int base)
+    {
+        return (int)(base * (Math.pow(1.5, scale)));
+    }
+    
+    public void getInputs()
+    {
+        wait(1000);
+        getPName();
+    }
+    
+    public String getPName()
+    {
+        System.out.print("\nThe year is 2337. Basically, robots took over the world.");
+        System.out.print("\nOf course, the humans are resisting, but it's not looking good for them.");
+        System.out.print("\nYou are one of those humans that it's not looking good for.");
+        System.out.print("\nYour mission is to fight as many evil robots as possible.");
+        System.out.print("\nGood luck!");
+        System.out.print("\nEnter your mech's name:\n>");
+        pName = sc.nextLine();
+        if(pName.equals("")){
+            pName = defaultPName;
+        }
+        
+        return pName;
+    }
+    
+    public void getCpuName()
+    {
+        if(cpuNameIndex < cpuNames.length){
+            cpuName = cpuNames[cpuNameIndex];
+            cpuNameIndex++;
+            cpuNames[cpuNames.length-1] = "Robot Overlord: " 
+                                            + bossNames[rngesus.nextInt(bossNames.length)];
+            System.out.println("Your opponent is..." + cpuName);
+            wait(1000);
+        }
+        else{
+            pWinsGame();
+        }
+    }
+    
+    public void playGame()
+    {
+        getInputs();
+        while(playAgain)
+        {
+            while(!gameOver)
+            {
+                displayGameStart();
+                setup();
+                
+                firstTurn = rngesus.nextInt(2);
+                
+                if(firstTurn == 1)
+                {
+                    do
+                    {
+                        if(pHP > 0 && cpuHP > 0)
+                            pTakeTurn();
+                            
+                        if(pHP > 0 && cpuHP > 0)
+                            cpuTakeTurn();
+                    } while(pHP > 0 && cpuHP > 0);
+                    
+                    gameOver = true;
+                }
+                else
+                {
+                    displayEnergy();
+                    pause();
+                    
+                    do
+                    {
+                        if(pHP > 0 && cpuHP > 0)
+                            cpuTakeTurn();
+                            
+                        if(pHP > 0 && cpuHP > 0)
+                            pTakeTurn();
+                    } while(pHP > 0 && cpuHP > 0);
+                    
+                    gameOver = true;
+                }
+            }
+
+            gameOver();
+        }
+        
+        printFinalScore();
+    }
+    
+    public void displayGameStart()
+    {
+        getCpuName();
+        System.out.println("GAME START");
+        System.out.println("\n<<>><<>><<>><<>><<>>");
+        System.out.println("Start of Level " + (amtGames+1) + ":");
+        System.out.println("<<>><<>><<>><<>><<>>\n");
+        wait(1000);
+    }
+    
+    public void setup()
+    {
+        maxPHP = scale(20);
+        maxCpuHP = scale(15);
+        rocketPunchDmg = scale(10);
+        servoSlamDmg = scale(7);
+        bashDmg = scale(4);
+        EMPDmg = scale(20);
+        clusterBombsDmg = scale(4);
+        shieldBlock = scale(10);
+        rechargeEnergy = scale(5);
+        pHP = maxPHP;
+        cpuHP = maxCpuHP;
+        dmgToP = 0;
+        dmgToCpu = 0;
+        amtGames++;
+    }
+    
+    public void displayEnergy()
+    {
+        System.out.println(pName + "'s Energy: " + pHP);
+        System.out.println("____________________________________________________________");
+        for(int x = 0; x < pHP/30; x++)
+        {
+            System.out.println("[][][][][][][][][][][][][][][][][][][][][][][][][][][][][][]");
+        }
+        for(int x = 0; x < pHP%30; x++)
+        {
+            System.out.print("[]");
+        }
+
+        System.out.print("\n____________________________________________________________\n");
+        
+        if(pHP > ((maxPHP)*2)/3)
+        {
+            System.out.println("(o)  (o)");
+            System.out.println("");
+            System.out.println(" \\____/\n");
+        }
+        else if(pHP > ((maxPHP)/3))
+        {
+            System.out.println("(o)  (o)");
+            System.out.println(" ______");
+            System.out.println("");
+        }
+        else if(pHP > 0)
+        {
+            System.out.println(" /     \\");
+            System.out.println("(o)   (o)");
+            System.out.println("  _____");
+            System.out.println(" /     \\\n");
+        }
+        else
+        {
+            System.out.println("(X)   (X)");
+            System.out.println("  _____");
+            System.out.println(" /     \\\n");
+        }
+        System.out.println(cpuName + "'s Energy: " + cpuHP);
+        System.out.println("____________________________________________________________");
+        for(int x = 0; x < cpuHP/30; x++)
+        {
+            System.out.println("[][][][][][][][][][][][][][][][][][][][][][][][][][][][][][]");
+        }
+        for(int x = 0; x < cpuHP%30; x++)
+        {
+            System.out.print("[]");
+        }
+        System.out.print("\n____________________________________________________________\n");
+        
+        if(cpuHP > ((maxCpuHP)*2)/3)
+        {
+            System.out.println("(+)  (+)");
+            System.out.println("");
+            System.out.println(" \\____/\n");
+        }
+        else if(cpuHP > ((maxCpuHP)/3))
+        {
+            System.out.println("(+)  (+)");
+            System.out.println(" ______");
+            System.out.println("");
+        }
+        else if(cpuHP > 0)
+        {
+            System.out.println(" /     \\");
+            System.out.println("(+)   (+)");
+            System.out.println("  _____");
+            System.out.println(" /     \\\n");
+        }
+        else
+        {
+            System.out.println("(X)   (X)");
+            System.out.println("  _____");
+            System.out.println(" /     \\\n");
+        }
+        
+        wait(1000);
+    }
+    
+    public void displayMoves()
+    {
+        System.out.println("Option\tMove\t\tDescription");
+        wait(300);
+        System.out.println("1\tRocket Punch\t" + rocketPunchChance + "% chance to deal up to " + (rocketPunchDmg) + " dmg");
+        wait(300);
+        System.out.println("2\tServo Slam\t" + servoSlamChance + "% chance to deal up to " + (servoSlamDmg) + " dmg");
+        wait(300);
+        System.out.println("3\tBash\t\t" + bashChance + "% chance to deal up to " + (bashDmg) + " dmg");
+        wait(300);
+        System.out.println("4\tEMP\t\t50% chance to deal up to " + EMPDmg + " dmg, 50% chance to take half as much dmg");
+        wait(300);
+        System.out.println("5\tCluster Bombs\t" + clusterBombsChance + "% chance to deal up to " + (clusterBombsDmg) + " dmg, attacks 3 times");
+        wait(300);
+        System.out.println("6\tEnergy Shield\t" + energyShieldChance + "% chance to absorb up to " + (shieldBlock) + " dmg on enemy's next turn");
+        wait(300);
+        System.out.println("7\tRecharge\t" + rechargeChance + "% chance to recharge up to " + (rechargeEnergy) + " pts of energy");
+        wait(300);
+    }
+    
+    public void displayTurn(String name)
+    {
+        System.out.println("{{{{{{{{{{{{{{{{{|}}}}}}}}}}}}}}}}}");
+        System.out.println(" BEGIN " + name + "'s Turn");
+        System.out.println("{{{{{{{{{{{{{{{{{|}}}}}}}}}}}}}}}}}\n");
+        wait(500);
+    }
+    
+    public void pTakeTurn()
+    {
+        displayTurn(pName);
+        
+        displayEnergy();
+        displayMoves();
+        
+        int x = 0;
+        while(x == 0)
+        {
+            System.out.print("\n\nInput option number:\n>");
+            option = sc.nextLine();
+            if(!option.equals("1") && !option.equals("2") && !option.equals("3") && !option.equals("4")
+                && !option.equals("5") && !option.equals("6") && !option.equals("7"))
+                System.out.println("That is not a valid option!");
+            else if(option.equals("1337"))
+                System.exit(0);
+            else
+                x = 1;
+        }
+        
+        switch(option)
+        {
+            case "1": System.out.println("\n" + pName + " rocket punches " + cpuName + "!");
+                    rocketPunch(pName);
+                break;
+                
+            case "2": System.out.println("\n" + pName + " servo slams " + cpuName + "!");
+                    servoSlam(pName);
+                break;
+                
+            case "3": System.out.println("\n" + pName + " bashes " + cpuName + "!");
+                    bash(pName);
+                break;
+                
+            case "4": System.out.println("\n" + pName + " detonates an EMP!");
+                    EMP(pName);
+                break;
+                
+            case "6": System.out.println("\n" + pName + " throws up an energy shield!");
+                    energyShield();
+                break;
+                
+            case "7": System.out.println("\n" + pName + " recharges energy!");
+                    recharge(pName);
+                break;
+                
+            case "5": System.out.println("\n" + pName + " throws 3 cluster bombs!");
+                    clusterBombs(pName);
+                break;
+                
+            default: System.out.println("\n" + pName + " throws up an energy shield!");
+                    energyShield();
+                break;
+        }
+        wait(1000);
+        displayEnergy();
+        System.out.println("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=");
+        turnReset();
+        pause();
+        System.out.println("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=");
+    }
+    
+    public void cpuTakeTurn()
+    {
+        displayTurn(cpuName);
+        
+        cpuChance = rngesus.nextInt(101);
+        
+        if(cpuHP >= maxCpuHP/2)
+            if(cpuChance <= 90)
+                cpuOption = (1+rngesus.nextInt(5));
+            else
+                cpuOption = (6+rngesus.nextInt(2));
+        else
+            if(cpuChance <= 50)
+                cpuOption = (1+rngesus.nextInt(5));
+            else
+                cpuOption = (6+rngesus.nextInt(2));
+        if(pHP == maxPHP/10)
+            cpuOption = 3;    
+            
+        wait(1000);
+        switch(cpuOption)
+        {
+            case 1: System.out.println("\n" + cpuName + " rocket punches " + pName + "!\n");
+                    rocketPunch(cpuName);
+                break;
+                
+            case 2: System.out.println("\n" + cpuName + " servo slams " + pName + "!\n");
+                    servoSlam(cpuName);
+                break;
+                
+            case 3: System.out.println("\n" + cpuName + " bashes " + pName + "!\n");
+                    bash(cpuName);
+                break;
+                
+            case 4: System.out.println("\n" + cpuName + " detonates an EMP!\n");
+                    EMP(cpuName);
+                break;
+                
+            case 6: System.out.println("\n" + cpuName + " throws up an energy shield!\n");
+                    energyShield();
+                break;
+                
+            case 7: System.out.println("\n" + cpuName + " recharges energy!\n");
+                    recharge(cpuName);
+                break;
+                
+            case 5: System.out.println("\n" + cpuName + " throws 3 cluster bombs!\n");
+                    clusterBombs(cpuName);
+                break;
+                
+            default: System.out.println("\n" + cpuName + " throws up an energy shield!");
+                    energyShield();
+                break;
+        }
+        wait(1000);
+        displayEnergy();
+        System.out.println("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=");
+        turnReset();
+        pause();
+        System.out.println("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=");
+    }
+    
+        public void turnReset()
+        {
+            dmgToP = 0;
+            dmgToCpu = 0;
+            heal = 0;
+            option = "";
+            cpuOption = 0;
+        }
+    
+    public void pAttack(int chance, int dmg)
+    {
+        hit = rngesus.nextInt(101);
+        hitChance = chance;
+        if(hit <= hitChance)
+        {
+            dmgToCpu = 1+rngesus.nextInt(dmg);
+            if(hitChance == clusterBombsChance)
+                System.out.println("BOOM!");
+            wait(300);
+            if(hit <= CRIT_CHANCE)
+            {
+                dmgToCpu *= 3;
+                dmgToCpu /= 2;
+                dmgToCpu += 1;
+                System.out.println("CRITICAL HIT!!!");
+            }
+            wait(1000);
+        }
+        else
+            System.out.println("The attack misses!");
+        wait(100);
+        if(block > 0)
+        {
+            dmgToCpu -= block;
+            System.out.println("Blocked!");
+            if(dmgToCpu < 0)
+                dmgToCpu = 0;
+            wait(1000);
+        }
+        block = 0;
+        cpuHP -= dmgToCpu;
+        System.out.println(""+ pName + " deals " + dmgToCpu + " damage to " + cpuName + "!\n");
+        wait(500);
+        dmgToCpu = 0;
+    }    
+        
+    public void cpuAttack(int chance, int dmg)
+    {
+        hit = rngesus.nextInt(101);
+        hitChance = chance;
+        if(hit <= hitChance)
+        {
+            dmgToP = 1+rngesus.nextInt(dmg);
+            if(hitChance == clusterBombsChance)
+                System.out.println("BOOM!");
+            wait(300);
+            if(hit <= CRIT_CHANCE)
+            {
+                dmgToP *= 3;
+                dmgToP /= 2;
+                dmgToP += 1;
+                System.out.println("CRITICAL HIT!!!");
+            }
+            wait(1000);
+        }
+        else
+            System.out.println("The attack misses!");
+        wait(100);
+        if(block > 0)
+        {
+            dmgToP -= block;
+            System.out.println("Blocked!");
+            if(dmgToP < 0)
+                dmgToP = 0;
+        }
+        wait(1000);
+        block = 0;
+        pHP -= dmgToP;
+        System.out.println(""+ cpuName + " deals " + dmgToP + " damage to " + pName + "!\n");
+        wait(500);
+        dmgToP = 0;
+    }
+    
+        public void rocketPunch(String name)
+        {
+            if(name.equals(pName))
+                pAttack(rocketPunchChance,rocketPunchDmg);
+            else if(name.equals(cpuName))
+                cpuAttack(rocketPunchChance-cpuPenalty,rocketPunchDmg);
+        }
+        
+        public void servoSlam(String name)
+        {
+            if(name.equals(pName))
+                pAttack(servoSlamChance,servoSlamDmg);
+            else if(name.equals(cpuName))
+                cpuAttack(servoSlamChance-cpuPenalty,servoSlamDmg);
+        }
+        
+        public void bash(String name)
+        {
+            if(name.equals(pName))
+                pAttack(bashChance,bashDmg);
+            else if(name.equals(cpuName))
+                cpuAttack(bashChance-cpuPenalty,bashDmg);
+            
+        }
+        
+        public void EMP(String name)
+        {
+            if(name.equals(pName))
+                pEMP();
+            else if(name.equals(cpuName))
+                cpuEMP();
+        }
+        public void pEMP()
+        {
+            pAttack(50,EMPDmg);
+            if(hit%2 == 0)
+                dmgToP = (1+rngesus.nextInt(EMPDmg/2));
+            
+            pHP -= dmgToP;
+            System.out.println(pName + " takes " + dmgToP + " damage from the shockwave!");
+        }
+        
+        public void cpuEMP()
+        {
+            cpuAttack(50,EMPDmg);
+            if(hit%2 == 0)
+                dmgToCpu = (1+rngesus.nextInt(EMPDmg/2));
+            
+            cpuHP -= dmgToCpu;
+            System.out.println(cpuName + " takes " + dmgToCpu + " damage from the shockwave!");
+        }
+        
+        public void clusterBombs(String name)
+        {
+            if(name.equals(pName))
+                for(int i = 0;i < 3;i++)
+                            pAttack(clusterBombsChance,clusterBombsDmg);
+            else if(name.equals(cpuName))
+                for(int i = 0;i < 3;i++)
+                            cpuAttack(clusterBombsChance-cpuPenalty,clusterBombsDmg);
+        }
+
+        public void energyShield()
+        {
+            hit = rngesus.nextInt(101);
+            hitChance = energyShieldChance;
+            
+            if(hit <= hitChance)
+            {
+                block += shieldBlock;
+                if(hit <= CRIT_CHANCE)
+                {
+                    block *= 3;
+                    block /= 2;
+                    block += 1;
+                    System.out.println("SUPER BLOCK!!!");
+                }
+                
+                System.out.println("Success!");
+            }
+            else
+                System.out.println("The shield fails!");
+        }
+        
+        public void recharge(String name)
+        {
+            hit = rngesus.nextInt(101);
+            hitChance = rechargeChance;
+            
+            if(hit <= hitChance)
+            {
+                heal += (1+rngesus.nextInt(rechargeEnergy));
+                if(hit <= CRIT_CHANCE)
+                {
+                    heal *= 3;
+                    heal /= 2;
+                    heal += 1;
+                    System.out.println("SUPER HEAL!!!");
+                }
+            }
+            else
+                System.out.println("The recharge fails!");
+                
+            System.out.println("\n" + name + " recharges " + heal + " points of energy!");
+            
+            
+            if(name.equals(pName))
+            {
+                if(pHP + heal > maxPHP)
+                    heal = maxPHP - pHP;
+                pHP += heal;
+            }
+            else
+            {
+                if(cpuHP + heal > maxCpuHP)
+                    heal = maxCpuHP - cpuHP;
+                cpuHP += heal;
+            }
+        }
+    
+    public void gameOver()
+    {
+        if(pHP > 0 && cpuHP <= 0)
+        {
+            System.out.println(cpuName + " dies. You win!");
+            pWins++;
+            for(int x = 0; x == 0; x += 0)
+            {
+                System.out.println("\nMove onto level " + (scale + 2)+ "? (type 'y' or 'n':");
+                again = sc.nextLine();
+                if(again.equalsIgnoreCase("y"))
+                {
+                    playAgain = true;
+                    scale++;
+                    x++;
+                }
+                else if(again.equalsIgnoreCase("n"))
+                {
+                    playAgain = false;
+                    scale = 0;
+                    x++;
+                }
+                else
+                    System.out.println("That is not a valid answer!");
+            }
+        }
+        else if (pHP <= 0 && cpuHP > 0)
+        {
+            System.out.println(pName + " dies. You lose!");
+            for(int x = 0; x == 0; x += 0)
+            {
+                System.out.println("\nRestart? (type 'y' or 'n':");
+                again = sc.nextLine();
+                if(again.equalsIgnoreCase("y"))
+                {
+                    playAgain = true;
+                    amtGames = 0;
+                    scale = 0;
+                    x++;
+                }
+                else if(again.equalsIgnoreCase("n"))
+                {
+                    playAgain = false;
+                    scale = 0;
+                    x++;
+                }
+                else
+                    System.out.println("That is not a valid answer!");
+            }
+        }
+        else
+        {
+            System.out.println(pName + " and " + cpuName + " both die. You lose!");
+            for(int x = 0; x == 0; x += 0)
+            {
+                System.out.println("\nRestart? (type 'y' or 'n':");
+                again = sc.nextLine();
+                if(again.equalsIgnoreCase("y"))
+                {
+                    playAgain = true;
+                    amtGames = 0;
+                    scale = 0;
+                    x++;
+                }
+                else if(again.equalsIgnoreCase("n"))
+                {
+                    playAgain = false;
+                    scale = 0;
+                    x++;
+                }
+                else
+                    System.out.println("That is not a valid answer!");
+            }
+        }
+        cpuNameIndex = 0;
+        gameOver = false;
+    }
+
+    public void pause()
+    {
+        Scanner in = new Scanner(System.in);
+        
+        System.out.println("<press ENTER to continue>");
+        in.nextLine();
+    }
+    
+    public static void wait(int seconds)
+    {
+        try 
+        {
+            Thread.sleep(seconds);
+        } 
+        catch(InterruptedException ex)
+        {
+            Thread.currentThread().interrupt();
+        }
+    }
+    
+    private void pWinsGame(){
+        System.out.println("\n" + pName + " has defeated all the robots! Congratulations!");
+    }
+    
+    public void printFinalScore()
+    {
+        System.out.println("<<>><<>><<>><<>><<>><<>><<>><<>><<>><<>><<>><<>><<>><<>><<>><<>><<>>\n");
+        if(pWins  != 1)
+            System.out.println(pName + "'s final score is: " + pWins + " wins!");
+        else
+            System.out.println(pName + "'s final score is: " + pWins + " win!");
+        System.out.print("\nYour rank is...");
+        if(pWins >= cpuNames.length)
+            System.out.print("Iron Giant");
+        else if(pWins >= 6)
+            System.out.print("WALL-E");
+        else if(pWins >= 4)
+            System.out.print("Optimus Prime");
+        else if(pWins >= 2)
+            System.out.print("R2D2");
+        else
+            System.out.print("Baymax");
+        
+        System.out.println("\n\n\n\n\n\n\n\n");
+    }
+}
